@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include "select.h"
+#include "../game_logic/game_logic.h"
 
 #define BACKLOG 5       // Número máximo de conexões na fila de espera
 #define BUFFER_SIZE 1024
@@ -17,7 +18,6 @@ void start_select_server(int port) {
     fd_set readfds; // Conjunto de descritores para monitorar
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len;
-    char buffer[BUFFER_SIZE];
     
     // Inicializa os sockets dos clientes como vazios
     for (int i = 0; i < MAX_CLIENTS; i++) {
@@ -105,26 +105,13 @@ void start_select_server(int port) {
         for (int i = 0; i < MAX_CLIENTS; i++) {
             int sock = client_sockets[i];
             if (FD_ISSET(sock, &readfds)) {
-                ssize_t bytes_received = recv(sock, buffer, BUFFER_SIZE - 1, 0);
-                if (bytes_received == 0) {
-                    // Conexão encerrada pelo cliente
-                    printf("Conexão encerrada pelo cliente no socket %d\n", sock);
-                    close(sock);
-                    client_sockets[i] = 0;
-                } else if (bytes_received > 0) {
-                    buffer[bytes_received] = '\0'; // Garante que o buffer seja uma string válida
-                    printf("Mensagem recebida no socket %d: %s\n", sock, buffer);
+                // Processa o jogo da velha com o cliente
+                process_game(sock);
 
-                    // Envia resposta ao cliente
-                    const char *response = "HTTP/1.1 200 OK\r\n"
-                                           "Content-Type: text/plain\r\n"
-                                           "Content-Length: 13\r\n"
-                                           "\r\n"
-                                           "Hello, World!";
-                    if (send(sock, response, strlen(response), 0) == -1) {
-                        perror("Erro ao enviar resposta");
-                    }
-                }
+                // Conexão encerrada após o término do jogo
+                printf("Conexão encerrada pelo cliente no socket %d\n", sock);
+                close(sock);
+                client_sockets[i] = 0;
             }
         }
     }

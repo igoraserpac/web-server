@@ -3,7 +3,7 @@ EXEC = server
 
 # Compilador e flags
 CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude/iterativo -Iinclude/fork -Iinclude/fila-tarefas -Iinclude/select
+CFLAGS = -Wall -Wextra -Iinclude/iterativo -Iinclude/fork -Iinclude/fila-tarefas -Iinclude/select -Iinclude/game_logic
 
 # Diretórios
 SRC_DIR = src
@@ -15,7 +15,8 @@ SRCS = $(SRC_DIR)/main.c \
        $(INCLUDE_DIR)/iterativo/iterativo.c \
        $(INCLUDE_DIR)/fork/fork.c \
        $(INCLUDE_DIR)/fila-tarefas/fila-tarefas.c \
-       $(INCLUDE_DIR)/select/select.c
+       $(INCLUDE_DIR)/select/select.c \
+       $(INCLUDE_DIR)/game_logic/game_logic.c
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
 
 # Regras principais

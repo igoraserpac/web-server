@@ -6,31 +6,18 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include "fork.h"
+#include "../game_logic/game_logic.h"
 
 #define BACKLOG 5 // Número máximo de conexões na fila de espera
 #define BUFFER_SIZE 1024
 
 void handle_client(int client_fd) {
-    char buffer[BUFFER_SIZE];
-    const char *response = "HTTP/1.1 200 OK\r\n"
-                           "Content-Type: text/plain\r\n"
-                           "Content-Length: 13\r\n"
-                           "\r\n"
-                           "Hello, World!";
+    printf("Processo filho iniciando o jogo para o cliente.\n");
 
-    // Recebe dados do cliente (opcional, dependendo do protocolo usado)
-    ssize_t bytes_received = recv(client_fd, buffer, BUFFER_SIZE - 1, 0);
-    if (bytes_received > 0) {
-        buffer[bytes_received] = '\0'; // Garante que o buffer seja uma string válida
-        printf("Requisição recebida:\n%s\n", buffer);
-    }
+    // Chama a lógica do jogo da velha
+    process_game(client_fd);
 
-    // Envia a resposta ao cliente
-    if (send(client_fd, response, strlen(response), 0) == -1) {
-        perror("Erro ao enviar resposta");
-    }
-
-    // Fecha a conexão com o cliente
+    // Fecha a conexão com o cliente após o término do jogo
     close(client_fd);
     printf("Conexão encerrada pelo processo filho.\n");
 }
