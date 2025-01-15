@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/select.h>
+#include <signal.h>
 #include "../include/select.h"
 #include "../include/request_handler.h"
 
@@ -13,11 +14,14 @@
 #define MAX_CLIENTS 100 // Número máximo de clientes que podem se conectar simultaneamente
 
 void start_select_server(int port) {
-    int server_fd, client_fd, max_fd, activity;
+    int client_fd, max_fd, activity;
     int client_sockets[MAX_CLIENTS];
     fd_set readfds; // Conjunto de descritores para monitorar
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len;
+
+    // Registrar tratador de sinal
+    signal(SIGINT, handle_sigint);
     
     // Inicializa os sockets dos clientes como vazios
     for (int i = 0; i < MAX_CLIENTS; i++) {

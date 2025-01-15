@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include "../include/fork.h"
 #include "../include/request_handler.h"
 
@@ -23,9 +24,12 @@ void handle_client(int client_fd) {
 }
 
 void start_fork_server(int port) {
-    int server_fd, client_fd;
+    int client_fd;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len;
+
+    // Registrar tratador de sinal
+    signal(SIGINT, handle_sigint);
 
     // Criação do socket
     server_fd = socket(AF_INET, SOCK_STREAM, 0);

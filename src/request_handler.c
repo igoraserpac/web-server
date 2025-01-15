@@ -7,6 +7,15 @@
 
 #define BUFFER_SIZE 1024
 
+
+void handle_sigint() {
+    if (server_fd != -1) {
+        close(server_fd);
+        printf("\nServidor encerrado e porta liberada.\n");
+    }
+    exit(0);
+}
+
 void process_request(int client_fd) {
     char buffer[BUFFER_SIZE];
     FILE *file;

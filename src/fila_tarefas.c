@@ -5,7 +5,8 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include "../include/fila-tarefas.h"
+#include <signal.h>
+#include "../include/fila_tarefas.h"
 #include "../include/request_handler.h"
 
 #define BACKLOG 5       // Número máximo de conexões na fila de espera
@@ -74,10 +75,13 @@ void *worker_thread() {
 }
 
 void start_task_queue_server(int port, int thread_count) {
-    int server_fd, client_fd;
+    int client_fd;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len;
     pthread_t threads[thread_count];
+
+    // Registrar tratador de sinal
+    signal(SIGINT, handle_sigint);
 
     // Inicializa a fila de tarefas
     queue.front = queue.rear = queue.count = 0;
@@ -138,7 +142,7 @@ void start_task_queue_server(int port, int thread_count) {
         enqueue(client_fd);
     }
 
-    // Liberação de recursos (nunca será alcançado neste exemplo)
+    // Liberação de recursos
     close(server_fd);
     pthread_mutex_destroy(&queue.lock);
     pthread_cond_destroy(&queue.not_empty);

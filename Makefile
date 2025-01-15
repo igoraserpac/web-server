@@ -14,7 +14,7 @@ CFLAGS = -Wall -Wextra -Werror -I$(INCLUDE_DIR)
 SOURCES = $(SRC_DIR)/main.c \
           $(SRC_DIR)/iterativo.c \
           $(SRC_DIR)/fork.c \
-          $(SRC_DIR)/fila-tarefas.c \
+          $(SRC_DIR)/fila_tarefas.c \
           $(SRC_DIR)/select.c \
           $(SRC_DIR)/request_handler.c
 

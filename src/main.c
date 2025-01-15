@@ -3,7 +3,7 @@
 #include <string.h>
 #include "../include/iterativo.h"
 #include "../include/fork.h"
-#include "../include/fila-tarefas.h"
+#include "../include/fila_tarefas.h"
 #include "../include/select.h"
 
 void print_usage(const char *program_name) {
@@ -11,7 +11,7 @@ void print_usage(const char *program_name) {
     printf("Modos disponíveis:\n");
     printf("  iterativo        - Servidor iterativo\n");
     printf("  fork             - Servidor utilizando fork ou threads\n");
-    printf("  fila-tarefas     - Servidor com threads e fila de tarefas\n");
+    printf("  fila_tarefas     - Servidor com threads e fila de tarefas\n");
     printf("  select           - Servidor concorrente utilizando select\n");
     printf("Exemplo: %s iterativo 8080\n", program_name);
 }
@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
     } else if (strcmp(mode, "fork") == 0) {
         printf("Iniciando servidor no modo fork/thread na porta %d...\n", port);
         start_fork_server(port);
-    } else if (strcmp(mode, "fila-tarefas") == 0) {
+    } else if (strcmp(mode, "fila_tarefas") == 0) {
         printf("Iniciando servidor no modo fila de tarefas na porta %d...\n", port);
         start_task_queue_server(port, 4);
     } else if (strcmp(mode, "select") == 0) {

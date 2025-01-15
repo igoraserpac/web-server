@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <signal.h>
 #include "../include/iterativo.h"
 #include "../include/request_handler.h"
 
@@ -11,9 +12,12 @@
 #define BUFFER_SIZE 1024
 
 void start_iterative_server(int port) {
-    int server_fd, client_fd;
+    int client_fd;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len;
+
+    // Registrar tratador de sinal
+    signal(SIGINT, handle_sigint);
 
     // Criação do socket
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
