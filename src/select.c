@@ -5,8 +5,8 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/select.h>
-#include "select.h"
-#include "../game_logic/game_logic.h"
+#include "../include/select.h"
+#include "../include/request_handler.h"
 
 #define BACKLOG 5       // Número máximo de conexões na fila de espera
 #define BUFFER_SIZE 1024
@@ -105,10 +105,11 @@ void start_select_server(int port) {
         for (int i = 0; i < MAX_CLIENTS; i++) {
             int sock = client_sockets[i];
             if (FD_ISSET(sock, &readfds)) {
-                // Processa o jogo da velha com o cliente
-                process_game(sock);
 
-                // Conexão encerrada após o término do jogo
+                // Processamento de requisição
+                process_request(client_fd);
+
+                // Conexão encerrada após o término do envio
                 printf("Conexão encerrada pelo cliente no socket %d\n", sock);
                 close(sock);
                 client_sockets[i] = 0;

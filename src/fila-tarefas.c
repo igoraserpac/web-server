@@ -5,8 +5,8 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include "fila-tarefas.h"
-#include "../game_logic/game_logic.h"
+#include "../include/fila-tarefas.h"
+#include "../include/request_handler.h"
 
 #define BACKLOG 5       // Número máximo de conexões na fila de espera
 #define BUFFER_SIZE 1024
@@ -56,48 +56,17 @@ int dequeue() {
     return socket;
 }
 
-// void *worker_thread(void *arg) {
-//     while (1) {
-//         int client_fd = dequeue();
-
-//         char buffer[BUFFER_SIZE];
-//         const char *response = "HTTP/1.1 200 OK\r\n"
-//                                "Content-Type: text/plain\r\n"
-//                                "Content-Length: 13\r\n"
-//                                "\r\n"
-//                                "Hello, World!";
-
-//         // Recebe dados do cliente (opcional)
-//         ssize_t bytes_received = recv(client_fd, buffer, BUFFER_SIZE - 1, 0);
-//         if (bytes_received > 0) {
-//             buffer[bytes_received] = '\0'; // Garante que o buffer seja uma string válida
-//             printf("Requisição recebida:\n%s\n", buffer);
-//         }
-
-//         // Envia resposta ao cliente
-//         if (send(client_fd, response, strlen(response), 0) == -1) {
-//             perror("Erro ao enviar resposta");
-//         }
-
-//         // Fecha a conexão com o cliente
-//         close(client_fd);
-//         printf("Conexão encerrada pela thread.\n");
-//     }
-//     return NULL;
-// }
-
-void *worker_thread(void *arg) {
+void *worker_thread() {
     while (1) {
         // Dequeue: obtém o descritor de socket do próximo cliente na fila
         int client_fd = dequeue();
 
-        // Substituímos a lógica de resposta fixa pela lógica do jogo da velha
         printf("Thread iniciando o processamento do jogo para o cliente.\n");
 
-        // Processa o jogo para o cliente conectado
-        process_game(client_fd);
+        // Processamento de requisição
+        process_request(client_fd);
 
-        // Fecha a conexão com o cliente após o término do jogo
+        // Fecha a conexão com o cliente após o término do envio
         close(client_fd);
         printf("Conexão encerrada pela thread.\n");
     }

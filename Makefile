@@ -1,38 +1,49 @@
-# Nome do executável
-EXEC = server
-
-# Compilador e flags
+# Nome do compilador
 CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude/iterativo -Iinclude/fork -Iinclude/fila-tarefas -Iinclude/select -Iinclude/game_logic
 
 # Diretórios
-SRC_DIR = src
 INCLUDE_DIR = include
+SRC_DIR = src
 OBJ_DIR = obj
+FILES_DIR = files
 
-# Fontes e objetos
-SRCS = $(SRC_DIR)/main.c \
-       $(INCLUDE_DIR)/iterativo/iterativo.c \
-       $(INCLUDE_DIR)/fork/fork.c \
-       $(INCLUDE_DIR)/fila-tarefas/fila-tarefas.c \
-       $(INCLUDE_DIR)/select/select.c \
-       $(INCLUDE_DIR)/game_logic/game_logic.c
-OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
+# Flags de compilação
+CFLAGS = -Wall -Wextra -Werror -I$(INCLUDE_DIR)
 
-# Regras principais
-.PHONY: all clean
+# Arquivos fonte
+SOURCES = $(SRC_DIR)/main.c \
+          $(SRC_DIR)/iterativo.c \
+          $(SRC_DIR)/fork.c \
+          $(SRC_DIR)/fila-tarefas.c \
+          $(SRC_DIR)/select.c \
+          $(SRC_DIR)/request_handler.c
 
-all: $(EXEC)
+# Arquivos objeto na pasta obj
+OBJECTS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SOURCES))
 
-# Regra para criar o executável
-$(EXEC): $(OBJS)
+# Nome do executável
+TARGET = server
+
+# Regras
+all: $(TARGET)
+
+# Criação do executável
+$(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $^
 
-# Regra para compilar os arquivos .c em .o
-$(OBJ_DIR)/%.o: %.c
-	@mkdir -p $(@D)
+# Compilação dos arquivos .c para .o na pasta obj
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Limpeza dos arquivos gerados
+# Criação da pasta obj, se não existir
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+
+# Limpeza dos arquivos objeto e do executável
 clean:
-	rm -rf $(OBJ_DIR) $(EXEC)
+	rm -rf $(OBJ_DIR) $(TARGET)
+
+run: all
+	./$(TARGET) iterativo 8080
+
+.PHONY: all clean run

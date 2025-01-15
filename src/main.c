@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../include/iterativo/iterativo.h"
-#include "../include/fork/fork.h"
-#include "../include/fila-tarefas/fila-tarefas.h"
-#include "../include/select/select.h"
+#include "../include/iterativo.h"
+#include "../include/fork.h"
+#include "../include/fila-tarefas.h"
+#include "../include/select.h"
 
 void print_usage(const char *program_name) {
     printf("Uso: %s <modo> <porta>\n", program_name);

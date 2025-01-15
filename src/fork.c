@@ -4,13 +4,25 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include "iterativo.h"
-#include "../game_logic/game_logic.h"
+#include <sys/wait.h>
+#include "../include/fork.h"
+#include "../include/request_handler.h"
 
 #define BACKLOG 5 // Número máximo de conexões na fila de espera
 #define BUFFER_SIZE 1024
 
-void start_iterative_server(int port) {
+void handle_client(int client_fd) {
+    printf("Processo filho iniciando o jogo para o cliente.\n");
+
+    // Processamento de requisição
+    process_request(client_fd);
+
+    // Fecha a conexão com o cliente após o término do envio
+    close(client_fd);
+    printf("Conexão encerrada pelo processo filho.\n");
+}
+
+void start_fork_server(int port) {
     int server_fd, client_fd;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len;
@@ -42,7 +54,7 @@ void start_iterative_server(int port) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Servidor iterativo rodando na porta %d...\n", port);
+    printf("Servidor com fork rodando na porta %d...\n", port);
 
     // Loop principal para aceitar e processar conexões
     while (1) {
@@ -57,15 +69,25 @@ void start_iterative_server(int port) {
                inet_ntoa(client_addr.sin_addr),
                ntohs(client_addr.sin_port));
 
-        // Processa o jogo da velha com o cliente
-        process_game(client_fd);
+        // Criação do processo filho para lidar com o cliente
+        pid_t pid = fork();
+        if (pid < 0) {
+            perror("Erro ao criar processo filho");
+            close(client_fd);
+        } else if (pid == 0) {
+            // Processo filho
+            close(server_fd); // Fecha o socket do servidor no processo filho
+            handle_client(client_fd);
+            exit(EXIT_SUCCESS); // Encerra o processo filho
+        } else {
+            // Processo pai
+            close(client_fd); // Fecha o socket do cliente no processo pai
+        }
 
-        // Fecha a conexão com o cliente após o término do jogo
-        close(client_fd);
-        printf("Conexão encerrada.\n");
+        // Remove processos zumbis
+        while (waitpid(-1, NULL, WNOHANG) > 0);
     }
 
     // Fecha o socket do servidor (nunca será alcançado neste exemplo)
     close(server_fd);
 }
-
