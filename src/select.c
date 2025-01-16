@@ -13,6 +13,16 @@
 #define BUFFER_SIZE 1024
 #define MAX_CLIENTS 100 // Número máximo de clientes que podem se conectar simultaneamente
 
+int server_fd_select = -1;
+
+void handle_sigint_select() {
+    if (server_fd_select != -1) {
+        close(server_fd_select);
+        printf("\nServidor encerrado e porta liberada.\n");
+    }
+    exit(0);
+}
+
 void start_select_server(int port) {
     int client_fd, max_fd, activity;
     int client_sockets[MAX_CLIENTS];
@@ -21,7 +31,7 @@ void start_select_server(int port) {
     socklen_t client_len;
 
     // Registrar tratador de sinal
-    signal(SIGINT, handle_sigint);
+    signal(SIGINT, handle_sigint_select);
     
     // Inicializa os sockets dos clientes como vazios
     for (int i = 0; i < MAX_CLIENTS; i++) {
@@ -29,8 +39,8 @@ void start_select_server(int port) {
     }
 
     // Cria o socket do servidor
-    server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd == -1) {
+    server_fd_select = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd_select == -1) {
         perror("Erro ao criar o socket");
         exit(EXIT_FAILURE);
     }
@@ -42,16 +52,16 @@ void start_select_server(int port) {
     server_addr.sin_port = htons(port);
 
     // Faz o bind do socket à porta especificada
-    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
+    if (bind(server_fd_select, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
         perror("Erro no bind");
-        close(server_fd);
+        close(server_fd_select);
         exit(EXIT_FAILURE);
     }
 
     // Coloca o servidor em modo de escuta
-    if (listen(server_fd, BACKLOG) == -1) {
+    if (listen(server_fd_select, BACKLOG) == -1) {
         perror("Erro no listen");
-        close(server_fd);
+        close(server_fd_select);
         exit(EXIT_FAILURE);
     }
 
@@ -61,8 +71,8 @@ void start_select_server(int port) {
     while (1) {
         // Limpa e configura o conjunto de descritores
         FD_ZERO(&readfds);
-        FD_SET(server_fd, &readfds); // Adiciona o descritor do servidor
-        max_fd = server_fd;
+        FD_SET(server_fd_select, &readfds); // Adiciona o descritor do servidor
+        max_fd = server_fd_select;
 
         // Adiciona os sockets dos clientes ao conjunto de descritores
         for (int i = 0; i < MAX_CLIENTS; i++) {
@@ -83,9 +93,9 @@ void start_select_server(int port) {
         }
 
         // Verifica se há uma nova conexão no socket do servidor
-        if (FD_ISSET(server_fd, &readfds)) {
+        if (FD_ISSET(server_fd_select, &readfds)) {
             client_len = sizeof(client_addr);
-            client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
+            client_fd = accept(server_fd_select, (struct sockaddr *)&client_addr, &client_len);
             if (client_fd == -1) {
                 perror("Erro ao aceitar conexão");
                 continue;
@@ -122,5 +132,5 @@ void start_select_server(int port) {
     }
 
     // Fecha o socket do servidor
-    close(server_fd);
+    close(server_fd_select);
 }

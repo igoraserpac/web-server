@@ -25,6 +25,16 @@ typedef struct {
 
 static task_queue_t queue;
 
+int server_fd_fila = -1;
+
+void handle_sigint_fila() {
+    if (server_fd_fila != -1) {
+        close(server_fd_fila);
+        printf("\nServidor encerrado e porta liberada.\n");
+    }
+    exit(0);
+}
+
 void enqueue(int socket) {
     pthread_mutex_lock(&queue.lock);
 
@@ -81,7 +91,7 @@ void start_task_queue_server(int port, int thread_count) {
     pthread_t threads[thread_count];
 
     // Registrar tratador de sinal
-    signal(SIGINT, handle_sigint);
+    signal(SIGINT, handle_sigint_fila);
 
     // Inicializa a fila de tarefas
     queue.front = queue.rear = queue.count = 0;
@@ -98,8 +108,8 @@ void start_task_queue_server(int port, int thread_count) {
     }
 
     // Criação do socket
-    server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd == -1) {
+    server_fd_fila = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd_fila == -1) {
         perror("Erro ao criar o socket");
         exit(EXIT_FAILURE);
     }
@@ -111,16 +121,16 @@ void start_task_queue_server(int port, int thread_count) {
     server_addr.sin_port = htons(port);
 
     // Bind do socket
-    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
+    if (bind(server_fd_fila, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
         perror("Erro no bind");
-        close(server_fd);
+        close(server_fd_fila);
         exit(EXIT_FAILURE);
     }
 
     // Escutando conexões
-    if (listen(server_fd, BACKLOG) == -1) {
+    if (listen(server_fd_fila, BACKLOG) == -1) {
         perror("Erro no listen");
-        close(server_fd);
+        close(server_fd_fila);
         exit(EXIT_FAILURE);
     }
 
@@ -129,7 +139,7 @@ void start_task_queue_server(int port, int thread_count) {
     // Loop principal para aceitar conexões e colocá-las na fila
     while (1) {
         client_len = sizeof(client_addr);
-        client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
+        client_fd = accept(server_fd_fila, (struct sockaddr *)&client_addr, &client_len);
         if (client_fd == -1) {
             perror("Erro ao aceitar conexão");
             continue;
@@ -143,7 +153,7 @@ void start_task_queue_server(int port, int thread_count) {
     }
 
     // Liberação de recursos
-    close(server_fd);
+    close(server_fd_fila);
     pthread_mutex_destroy(&queue.lock);
     pthread_cond_destroy(&queue.not_empty);
     pthread_cond_destroy(&queue.not_full);

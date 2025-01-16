@@ -12,6 +12,16 @@
 #define BACKLOG 5 // Número máximo de conexões na fila de espera
 #define BUFFER_SIZE 1024
 
+int server_fd_fork = -1;
+
+void handle_sigint_fork() {
+    if (server_fd_fork != -1) {
+        close(server_fd_fork);
+        printf("\nServidor encerrado e porta liberada.\n");
+    }
+    exit(0);
+}
+
 void handle_client(int client_fd) {
     printf("Processo filho iniciando o jogo para o cliente.\n");
 
@@ -29,11 +39,11 @@ void start_fork_server(int port) {
     socklen_t client_len;
 
     // Registrar tratador de sinal
-    signal(SIGINT, handle_sigint);
+    signal(SIGINT, handle_sigint_fork);
 
     // Criação do socket
-    server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd == -1) {
+    server_fd_fork = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd_fork == -1) {
         perror("Erro ao criar o socket");
         exit(EXIT_FAILURE);
     }
@@ -45,16 +55,16 @@ void start_fork_server(int port) {
     server_addr.sin_port = htons(port);
 
     // Bind do socket
-    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
+    if (bind(server_fd_fork, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
         perror("Erro no bind");
-        close(server_fd);
+        close(server_fd_fork);
         exit(EXIT_FAILURE);
     }
 
     // Escutando conexões
-    if (listen(server_fd, BACKLOG) == -1) {
+    if (listen(server_fd_fork, BACKLOG) == -1) {
         perror("Erro no listen");
-        close(server_fd);
+        close(server_fd_fork);
         exit(EXIT_FAILURE);
     }
 
@@ -63,7 +73,7 @@ void start_fork_server(int port) {
     // Loop principal para aceitar e processar conexões
     while (1) {
         client_len = sizeof(client_addr);
-        client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
+        client_fd = accept(server_fd_fork, (struct sockaddr *)&client_addr, &client_len);
         if (client_fd == -1) {
             perror("Erro ao aceitar conexão");
             continue;
@@ -80,7 +90,7 @@ void start_fork_server(int port) {
             close(client_fd);
         } else if (pid == 0) {
             // Processo filho
-            close(server_fd); // Fecha o socket do servidor no processo filho
+            close(server_fd_fork); // Fecha o socket do servidor no processo filho
             handle_client(client_fd);
             exit(EXIT_SUCCESS); // Encerra o processo filho
         } else {
@@ -93,5 +103,5 @@ void start_fork_server(int port) {
     }
 
     // Fecha o socket do servidor (nunca será alcançado neste exemplo)
-    close(server_fd);
+    close(server_fd_fork);
 }
